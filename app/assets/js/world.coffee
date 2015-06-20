@@ -1,80 +1,214 @@
 class World
-  constructor: (@Matter) ->
-    @Engine = @Matter.Engine
-    @World = @Matter.World
-    @Bodies = @Matter.Bodies
-    @Body = @Matter.Body
-    @Constraint = @Matter.Constraint
+  constructor: (@p2) ->
     @create_world()
 
   create_world: ->
-    @engine = @Engine.create document.body
 
-    @create_raggdoll(400, 400)
+    p2 = @p2
 
-    ground = @Bodies.rectangle(400, 610, 810, 60, { isStatic: true })
-    @World.add(@engine.world, [ground])
+    shouldersDistance = 0.5
+    upperArmLength = 0.4
+    lowerArmLength = 0.4
+    upperArmSize = 0.2
+    lowerArmSize = 0.2
+    neckLength = 0.1
+    headRadius = 0.25
+    upperBodyLength = 0.6
+    pelvisLength = 0.4
+    upperLegLength = 0.5
+    upperLegSize = 0.2
+    lowerLegSize = 0.2
+    lowerLegLength = 0.5
 
-    @engine.world.gravity.y = .5
+    world = new p2.World({ gravity: [0,-10]})
 
-    @Engine.run(@engine)
+    OTHER =     Math.pow(2,1)
+    BODYPARTS = Math.pow(2,2)
+    GROUND =    Math.pow(2,3)
+    OTHER =     Math.pow(2,4)
+    bodyPartShapes = [];
 
-  create_raggdoll: (cx, cy) ->
+    app = new p2.WebGLRenderer ->
+      this.setWorld(world);
 
-    groupId = @Body.nextGroupId()
+    headShape =      new p2.Circle(headRadius)
+    upperArmShape =  new p2.Rectangle(upperArmLength,upperArmSize)
+    lowerArmShape =  new p2.Rectangle(lowerArmLength,lowerArmSize)
+    upperBodyShape = new p2.Rectangle(shouldersDistance,upperBodyLength)
+    pelvisShape =    new p2.Rectangle(shouldersDistance,pelvisLength)
+    upperLegShape =  new p2.Rectangle(upperLegSize,upperLegLength)
+    lowerLegShape =  new p2.Rectangle(lowerLegSize,lowerLegLength)
 
-    default_options =
-      restitution: 1
-      friction: 0.9
-      density: 0.2
-      # groupId: groupId
+    bodyPartShapes.push(headShape, upperArmShape, lowerArmShape, upperBodyShape, pelvisShape, upperLegShape, lowerLegShape)
 
-    head = @Bodies.rectangle(cx     , cy - 45, 15, 20, default_options)
-    body = @Bodies.rectangle(cx     , cy     , 30, 60, default_options)
-    lua =  @Bodies.rectangle(cx - 25, cy - 10, 10, 35, default_options)
-    lla =  @Bodies.rectangle(cx - 25, cy + 30, 10, 35, default_options)
-    rua =  @Bodies.rectangle(cx + 25, cy - 10, 10, 35, default_options)
-    rla =  @Bodies.rectangle(cx + 25, cy + 30, 10, 35, default_options)
-    lul =  @Bodies.rectangle(cx - 10, cy + 55, 10, 35, default_options)
-    lll =  @Bodies.rectangle(cx - 10, cy + 95, 10, 35, default_options)
-    rul =  @Bodies.rectangle(cx + 10, cy + 55, 10, 35, default_options)
-    rll =  @Bodies.rectangle(cx + 10, cy + 95, 10, 35, default_options)
+    for s, i in bodyPartShapes
+      s.collisionGroup = BODYPARTS;
+      s.collisionMask =  GROUND|OTHER;
 
-    @World.add(@engine.world, [head, body, lua, lla, rua, rla, lul, lll, rul, rll])
+    world.solver.iterations = 100;
+    world.solver.tolerance = 0.002;
 
-    constrs = []
-    constrs.push @create_hinge( body, head, {x: 0,   y: -35 })
-    constrs.push @create_hinge( body, lua , {x: -25, y: -25 })
-    constrs.push @create_hinge( lua , lla , {x: 0,   y: 20  })
-    constrs.push @create_hinge( body, rua , {x: 25,  y: -25 })
-    constrs.push @create_hinge( rua , rla , {x: 0,   y: 20  })
-    constrs.push @create_hinge( body, lul , {x: -10, y: 30  })
-    constrs.push @create_hinge( lul , lll , {x: 0,   y: 20  })
-    constrs.push @create_hinge( body, rul , {x: 10, y: 30  })
-    constrs.push @create_hinge( rul , rll , {x: 0,   y: 20  })
+    # Lower legs
+    lowerLeftLeg = new p2.Body
+      mass: 1
+      position: [-shouldersDistance/2,lowerLegLength / 2]
+
+    lowerRightLeg = new p2.Body
+      mass: 1
+      position: [shouldersDistance/2,lowerLegLength / 2]
+
+    lowerLeftLeg.addShape(lowerLegShape);
+    lowerRightLeg.addShape(lowerLegShape);
+    world.addBody(lowerLeftLeg);
+    world.addBody(lowerRightLeg);
+
+    # Upper legs
+    upperLeftLeg = new p2.Body
+      mass: 1
+      position: [-shouldersDistance/2,lowerLeftLeg.position[1]+lowerLegLength/2+upperLegLength / 2]
+
+    upperRightLeg = new p2.Body
+      mass: 1
+      position: [shouldersDistance/2,lowerRightLeg.position[1]+lowerLegLength/2+upperLegLength / 2],
+
+    upperLeftLeg.addShape(upperLegShape);
+    upperRightLeg.addShape(upperLegShape);
+    world.addBody(upperLeftLeg);
+    world.addBody(upperRightLeg);
+
+    # Pelvis
+    pelvis = new p2.Body
+      mass: 1
+      position: [0, upperLeftLeg.position[1]+upperLegLength/2+pelvisLength/2],
+
+    pelvis.addShape(pelvisShape);
+    world.addBody(pelvis);
+
+    # Upper body
+    upperBody = new p2.Body
+      mass: 1
+      position: [0,pelvis.position[1]+pelvisLength/2+upperBodyLength/2],
+
+    upperBody.addShape(upperBodyShape);
+    world.addBody(upperBody);
+
+    # Head
+    head = new p2.Body
+      mass: 1
+      position: [0,upperBody.position[1]+upperBodyLength/2+headRadius+neckLength],
+
+    head.addShape(headShape);
+    world.addBody(head);
+
+    # Upper arms
+    upperLeftArm = new p2.Body
+      mass: 1
+      position: [-shouldersDistance/2-upperArmLength/2, upperBody.position[1]+upperBodyLength/2],
+
+    upperRightArm = new p2.Body
+      mass: 1
+      position: [shouldersDistance/2+upperArmLength/2, upperBody.position[1]+upperBodyLength/2],
+
+    upperLeftArm.addShape(upperArmShape);
+    upperRightArm.addShape(upperArmShape);
+    world.addBody(upperLeftArm);
+    world.addBody(upperRightArm);
+
+    # lower arms
+    lowerLeftArm = new p2.Body
+      mass: 1
+      position: [ upperLeftArm.position[0] - lowerArmLength/2 - upperArmLength/2, upperLeftArm.position[1]],
+
+    lowerRightArm = new p2.Body
+      mass: 1
+      position: [ upperRightArm.position[0] + lowerArmLength/2 + upperArmLength/2, upperRightArm.position[1]],
+
+    lowerLeftArm.addShape(lowerArmShape);
+    lowerRightArm.addShape(lowerArmShape);
+    world.addBody(lowerLeftArm);
+    world.addBody(lowerRightArm);
 
 
-    @World.add(@engine.world, constrs)
+    # Neck joint
+    neckJoint = new p2.RevoluteConstraint head, upperBody,
+      localPivotA: [0,-headRadius-neckLength/2]
+      localPivotB: [0,upperBodyLength/2]
 
-  create_hinge: (bodyA, bodyB, pointA) ->
-    pointB =
-      x: - bodyB.position.x + bodyA.position.x + pointA.x
-      y: - bodyB.position.y + bodyA.position.y + pointA.y
+    neckJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    world.addConstraint(neckJoint);
 
-    pointB =
-      x: (pointB.x) * 0
-      y: (pointB.y) * 0
+    # Knee joints
+    leftKneeJoint = new p2.RevoluteConstraint lowerLeftLeg, upperLeftLeg,
+      localPivotA: [0, lowerLegLength/2]
+      localPivotB: [0,-upperLegLength/2]
 
-    pointA =
-      x: pointA.x * 0.0
-      y: pointA.y * 0.0
+    rightKneeJoint= new p2.RevoluteConstraint lowerRightLeg, upperRightLeg,
+      localPivotA: [0, lowerLegLength/2]
+      localPivotB:[0,-upperLegLength/2]
 
-    @Constraint.create
-      bodyA: bodyA
-      pointA: pointA
-      bodyB: bodyB
-      pointB: pointB
-      stiffness: 0.5
+    leftKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    rightKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    world.addConstraint(leftKneeJoint);
+    world.addConstraint(rightKneeJoint);
+
+    # Hip joints
+    leftHipJoint = new p2.RevoluteConstraint upperLeftLeg, pelvis,
+      localPivotA: [0, upperLegLength/2]
+      localPivotB: [-shouldersDistance/2,-pelvisLength/2]
+
+    rightHipJoint = new p2.RevoluteConstraint upperRightLeg, pelvis,
+      localPivotA: [0, upperLegLength/2]
+      localPivotB: [shouldersDistance/2,-pelvisLength/2]
+
+    leftHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    rightHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    world.addConstraint(leftHipJoint);
+    world.addConstraint(rightHipJoint);
+
+    # Spine
+    spineJoint = new p2.RevoluteConstraint pelvis, upperBody,
+      localPivotA: [0,pelvisLength/2],
+      localPivotB: [0,-upperBodyLength/2],
+
+    spineJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    world.addConstraint(spineJoint);
+
+    # Shoulders
+    leftShoulder = new p2.RevoluteConstraint upperBody, upperLeftArm,
+      localPivotA:[-shouldersDistance/2, upperBodyLength/2],
+      localPivotB:[upperArmLength/2,0],
+
+    rightShoulder= new p2.RevoluteConstraint upperBody, upperRightArm,
+      localPivotA:[shouldersDistance/2,  upperBodyLength/2],
+      localPivotB:[-upperArmLength/2,0],
+
+    leftShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
+    rightShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
+    world.addConstraint(leftShoulder);
+    world.addConstraint(rightShoulder);
+
+    # Elbow joint
+    leftElbowJoint = new p2.RevoluteConstraint lowerLeftArm, upperLeftArm,
+      localPivotA: [lowerArmLength/2, 0],
+      localPivotB: [-upperArmLength/2,0],
+
+    rightElbowJoint= new p2.RevoluteConstraint lowerRightArm, upperRightArm,
+      localPivotA:[-lowerArmLength/2,0],
+      localPivotB:[upperArmLength/2,0],
+
+    leftElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    rightElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    world.addConstraint(leftElbowJoint);
+    world.addConstraint(rightElbowJoint);
+
+    # Create ground
+    planeShape = new p2.Plane();
+    plane = new p2.Body({ position:[0,-1] });
+    plane.addShape(planeShape);
+    planeShape.collisionGroup = GROUND;
+    planeShape.collisionMask =  BODYPARTS|OTHER;
+    world.addBody(plane);
+
 
 define ->
   World

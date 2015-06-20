@@ -1,7 +1,6 @@
 requirejs.config({
     baseUrl: 'assets',
     paths: {
-      Matter: 'bower_components/matter-js/build/matter-0.8.0'
     },
     packages: [
       {
@@ -17,7 +16,8 @@ requirejs.config({
     ]
 });
 
-requirejs(["Matter", "cs!js/world"], function(Matter, World) {
-  world = new World(Matter);
+requirejs(["cs!js/world"], function(World) {
+  console.log(arguments);
+  world = new World(p2);
 
 });
