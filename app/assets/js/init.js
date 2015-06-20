@@ -18,5 +18,6 @@ requirejs.config({
 });
 
 requirejs(["Matter", "cs!js/world"], function(Matter, World) {
+  world = new World(Matter);
 
 });
