@@ -16,7 +16,7 @@ requirejs.config({
     ]
 });
 
-requirejs(["cs!js/world", "cs!js/neuron_network"], function(World, Network) {
+requirejs(["cs!js/world", "cs!js/neuron_network", "js/genetic-0.1.14"], function(World, Network, Genetic) {
   console.log(arguments);
   world = new World(p2);
 
