@@ -16,7 +16,7 @@ requirejs.config({
     ]
 });
 
-requirejs(["cs!js/world"], function(World) {
+requirejs(["cs!js/world", "cs!js/neuron_network"], function(World, Network) {
   console.log(arguments);
   world = new World(p2);
 

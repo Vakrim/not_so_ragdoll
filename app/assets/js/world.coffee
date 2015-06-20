@@ -3,6 +3,7 @@ class World
     @create_world()
 
     console.log "Bodies: #{@bodies.length} \nConstrains #{@constraints.length}"
+    @moments = Array(@constraints.length)
 
   create_world: ->
 
