@@ -19,7 +19,7 @@ class Renderer
     if shape.width? && shape.height?
       ctx.rect(-shape.width/2, -shape.height/2, shape.width, shape.height);
     else if shape.radius?
-      ctx.rect(-shape.radius, -shape.radius, shape.radius, shape.radius);
+      ctx.arc(0, 0, shape.radius, 0, 2 * Math.PI, false);
     ctx.stroke();
     ctx.restore();
 
