@@ -1,0 +1,20 @@
+{
+  "name": "not-so-ragdoll",
+  "version": "0.1",
+  "description": "Not so ragdoll",
+  "author": "Kamil Piotrowski <kamil.piotrowski1992@gmail.com>",
+  "contributors": [{
+    "name": "Kamil Piotrowski",
+    "email": "kamil.piotrowski1992@gmail.com"
+  }],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vakrim/not_so_ragdoll"
+  },
+  "dependencies": {
+    "connect": "~3.4.0",
+    "serve-static": "1.10.0"
+  },
+  "license": "MIT"
+}
+
