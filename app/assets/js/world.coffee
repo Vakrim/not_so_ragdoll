@@ -2,6 +2,8 @@ class World
   constructor: (@p2) ->
     @create_world()
 
+    console.log "Bodies: #{@bodies.length} \nConstrains #{@constraints.length}"
+
   create_world: ->
 
     p2 = @p2
@@ -28,8 +30,8 @@ class World
     OTHER =     Math.pow(2,4)
     bodyPartShapes = [];
 
-    app = new p2.WebGLRenderer ->
-      this.setWorld(world);
+    # app = new p2.WebGLRenderer ->
+      # this.setWorld(world);
 
     headShape =      new p2.Circle(headRadius)
     upperArmShape =  new p2.Rectangle(upperArmLength,upperArmSize)
@@ -45,8 +47,10 @@ class World
       s.collisionGroup = BODYPARTS;
       s.collisionMask =  GROUND|OTHER;
 
-    world.solver.iterations = 100;
-    world.solver.tolerance = 0.002;
+    # world.solver.iterations = 100;
+    # world.solver.tolerance = 0.002;
+
+    @bodies = []
 
     # Lower legs
     lowerLeftLeg = new p2.Body
@@ -61,6 +65,7 @@ class World
     lowerRightLeg.addShape(lowerLegShape);
     world.addBody(lowerLeftLeg);
     world.addBody(lowerRightLeg);
+    @bodies.push lowerLeftLeg, lowerRightLeg
 
     # Upper legs
     upperLeftLeg = new p2.Body
@@ -75,6 +80,7 @@ class World
     upperRightLeg.addShape(upperLegShape);
     world.addBody(upperLeftLeg);
     world.addBody(upperRightLeg);
+    @bodies.push upperLeftLeg, upperRightLeg
 
     # Pelvis
     pelvis = new p2.Body
@@ -83,6 +89,7 @@ class World
 
     pelvis.addShape(pelvisShape);
     world.addBody(pelvis);
+    @bodies.push pelvis
 
     # Upper body
     upperBody = new p2.Body
@@ -91,6 +98,7 @@ class World
 
     upperBody.addShape(upperBodyShape);
     world.addBody(upperBody);
+    @bodies.push upperBody
 
     # Head
     head = new p2.Body
@@ -99,6 +107,7 @@ class World
 
     head.addShape(headShape);
     world.addBody(head);
+    @bodies.push head
 
     # Upper arms
     upperLeftArm = new p2.Body
@@ -113,6 +122,7 @@ class World
     upperRightArm.addShape(upperArmShape);
     world.addBody(upperLeftArm);
     world.addBody(upperRightArm);
+    @bodies.push upperLeftArm, upperRightArm
 
     # lower arms
     lowerLeftArm = new p2.Body
@@ -127,7 +137,10 @@ class World
     lowerRightArm.addShape(lowerArmShape);
     world.addBody(lowerLeftArm);
     world.addBody(lowerRightArm);
+    @bodies.push lowerLeftArm, lowerRightArm
 
+
+    @constraints = []
 
     # Neck joint
     neckJoint = new p2.RevoluteConstraint head, upperBody,
@@ -136,6 +149,7 @@ class World
 
     neckJoint.setLimits(-Math.PI / 8, Math.PI / 8);
     world.addConstraint(neckJoint);
+    @constraints.push neckJoint
 
     # Knee joints
     leftKneeJoint = new p2.RevoluteConstraint lowerLeftLeg, upperLeftLeg,
@@ -150,6 +164,8 @@ class World
     rightKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
     world.addConstraint(leftKneeJoint);
     world.addConstraint(rightKneeJoint);
+    @constraints.push leftKneeJoint
+    @constraints.push rightKneeJoint
 
     # Hip joints
     leftHipJoint = new p2.RevoluteConstraint upperLeftLeg, pelvis,
@@ -164,6 +180,8 @@ class World
     rightHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
     world.addConstraint(leftHipJoint);
     world.addConstraint(rightHipJoint);
+    @constraints.push leftHipJoint
+    @constraints.push rightHipJoint
 
     # Spine
     spineJoint = new p2.RevoluteConstraint pelvis, upperBody,
@@ -172,6 +190,7 @@ class World
 
     spineJoint.setLimits(-Math.PI / 8, Math.PI / 8);
     world.addConstraint(spineJoint);
+    @constraints.push spineJoint
 
     # Shoulders
     leftShoulder = new p2.RevoluteConstraint upperBody, upperLeftArm,
@@ -186,6 +205,8 @@ class World
     rightShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
     world.addConstraint(leftShoulder);
     world.addConstraint(rightShoulder);
+    @constraints.push leftShoulder
+    @constraints.push rightShoulder
 
     # Elbow joint
     leftElbowJoint = new p2.RevoluteConstraint lowerLeftArm, upperLeftArm,
@@ -200,6 +221,8 @@ class World
     rightElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
     world.addConstraint(leftElbowJoint);
     world.addConstraint(rightElbowJoint);
+    @constraints.push leftElbowJoint
+    @constraints.push rightElbowJoint
 
     # Create ground
     planeShape = new p2.Plane();
