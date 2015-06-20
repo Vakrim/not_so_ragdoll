@@ -2,8 +2,16 @@ class World
   constructor: (@p2) ->
     @create_world()
 
-    console.log "Bodies: #{@bodies.length} \nConstrains #{@constraints.length}"
-    @moments = Array(@constraints.length)
+    console.log "World created!\nBodies: #{@bodies.length} \nConstrains #{@constraints.length}"
+
+  get_angles: ->
+    angles = []
+    for body in @bodies
+      angle = body.angle % (2*Math.PI);
+      if angle < 0
+        angle += (2*Math.PI)
+      angles.push angle
+    angles
 
   create_world: ->
 
@@ -24,6 +32,7 @@ class World
     lowerLegLength = 0.5
 
     world = new p2.World({ gravity: [0,-10]})
+    @world = world
 
     OTHER =     Math.pow(2,1)
     BODYPARTS = Math.pow(2,2)
@@ -32,7 +41,7 @@ class World
     bodyPartShapes = [];
 
     # app = new p2.WebGLRenderer ->
-      # this.setWorld(world);
+    #   this.setWorld(world);
 
     headShape =      new p2.Circle(headRadius)
     upperArmShape =  new p2.Rectangle(upperArmLength,upperArmSize)
@@ -48,8 +57,8 @@ class World
       s.collisionGroup = BODYPARTS;
       s.collisionMask =  GROUND|OTHER;
 
-    # world.solver.iterations = 100;
-    # world.solver.tolerance = 0.002;
+    world.solver.iterations = 100;
+    world.solver.tolerance = 0.002;
 
     @bodies = []
 
@@ -233,6 +242,13 @@ class World
     planeShape.collisionMask =  BODYPARTS|OTHER;
     world.addBody(plane);
 
+  step: ->
+    @world.step(1/60);
+
+  set_momentum: (moments) ->
+    for constraint, i in @constraints
+      constraint.bodyA.angularForce += moments[i]
+      constraint.bodyB.angularForce -= moments[i]
 
 define ->
   World
