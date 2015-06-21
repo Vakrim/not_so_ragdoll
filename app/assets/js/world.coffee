@@ -1,8 +1,8 @@
 class World
   constructor: (@p2) ->
     @create_world()
-
-    console.log "World created!\nBodies: #{@bodies.length} \nConstrains #{@constraints.length}"
+    @_fitness = 0;
+    @time = 0;
 
   get_angles: ->
     angles = []
@@ -11,11 +11,14 @@ class World
       if angle < 0
         angle += (2*Math.PI)
       angles.push angle
+    angles.push 1, Math.sin(@time * 2 * Math.PI)
     angles
 
   create_world: ->
 
     p2 = @p2
+
+    limit_rate = 1;
 
     shouldersDistance = 0.5
     upperArmLength = 0.4
@@ -118,6 +121,7 @@ class World
     head.addShape(headShape);
     world.addBody(head);
     @bodies.push head
+    @head = head
 
     # Upper arms
     upperLeftArm = new p2.Body
@@ -157,7 +161,7 @@ class World
       localPivotA: [0,-headRadius-neckLength/2]
       localPivotB: [0,upperBodyLength/2]
 
-    neckJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    neckJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
     world.addConstraint(neckJoint);
     @constraints.push neckJoint
 
@@ -170,8 +174,8 @@ class World
       localPivotA: [0, lowerLegLength/2]
       localPivotB:[0,-upperLegLength/2]
 
-    leftKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
-    rightKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    leftKneeJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
+    rightKneeJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
     world.addConstraint(leftKneeJoint);
     world.addConstraint(rightKneeJoint);
     @constraints.push leftKneeJoint
@@ -186,8 +190,8 @@ class World
       localPivotA: [0, upperLegLength/2]
       localPivotB: [shouldersDistance/2,-pelvisLength/2]
 
-    leftHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
-    rightHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    leftHipJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
+    rightHipJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
     world.addConstraint(leftHipJoint);
     world.addConstraint(rightHipJoint);
     @constraints.push leftHipJoint
@@ -198,7 +202,7 @@ class World
       localPivotA: [0,pelvisLength/2],
       localPivotB: [0,-upperBodyLength/2],
 
-    spineJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    spineJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
     world.addConstraint(spineJoint);
     @constraints.push spineJoint
 
@@ -211,8 +215,8 @@ class World
       localPivotA:[shouldersDistance/2,  upperBodyLength/2],
       localPivotB:[-upperArmLength/2,0],
 
-    leftShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
-    rightShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
+    leftShoulder.setLimits(-Math.PI / 3 * limit_rate, Math.PI / 3 * limit_rate);
+    rightShoulder.setLimits(-Math.PI / 3 * limit_rate, Math.PI / 3 * limit_rate);
     world.addConstraint(leftShoulder);
     world.addConstraint(rightShoulder);
     @constraints.push leftShoulder
@@ -227,8 +231,8 @@ class World
       localPivotA:[-lowerArmLength/2,0],
       localPivotB:[upperArmLength/2,0],
 
-    leftElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
-    rightElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+    leftElbowJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
+    rightElbowJoint.setLimits(-Math.PI / 8 * limit_rate, Math.PI / 8 * limit_rate);
     world.addConstraint(leftElbowJoint);
     world.addConstraint(rightElbowJoint);
     @constraints.push leftElbowJoint
@@ -242,13 +246,18 @@ class World
     planeShape.collisionMask =  BODYPARTS|OTHER;
     world.addBody(plane);
 
-  step: ->
-    @world.step(1/60);
+  step: (t = 1/60) ->
+    @time += t;
+    @world.step(t);
+    @_fitness += @head.position[1]
 
   set_momentum: (moments) ->
     for constraint, i in @constraints
       constraint.bodyA.angularForce += moments[i]
       constraint.bodyB.angularForce -= moments[i]
+
+  fitness: ->
+    @_fitness
 
 define ->
   World

@@ -221,11 +221,12 @@ var Genetic = Genetic || (function(){
 		}
 
 		// determine if we can use webworkers
-		this.usingWebWorker = this.configuration.webWorkers
-			&& typeof Blob != "undefined"
-			&& typeof Worker != "undefined"
-			&& typeof window.URL != "undefined"
-			&& typeof window.URL.createObjectURL != "undefined";
+		// this.usingWebWorker = this.configuration.webWorkers
+		// 	&& typeof Blob != "undefined"
+		// 	&& typeof Worker != "undefined"
+		// 	&& typeof window.URL != "undefined"
+		// 	&& typeof window.URL.createObjectURL != "undefined";
+		this.usingWebWorker = false;
 
 		function addslashes(str) {
 			return str.replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
