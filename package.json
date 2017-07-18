@@ -1,20 +1,36 @@
 {
   "name": "not-so-ragdoll",
-  "version": "0.1",
-  "description": "Not so ragdoll",
-  "author": "Kamil Piotrowski <kamil.piotrowski1992@gmail.com>",
-  "contributors": [{
-    "name": "Kamil Piotrowski",
-    "email": "kamil.piotrowski1992@gmail.com"
-  }],
   "repository": {
     "type": "git",
     "url": "https://github.com/Vakrim/not_so_ragdoll"
   },
-  "dependencies": {
-    "connect": "~3.4.0",
-    "serve-static": "1.10.0"
+  "version": "1.0.0",
+  "main": "webpack.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf dist/",
+    "build": "webpack",
+    "production": "webpack -p",
+    "start": "webpack-dev-server --inline --source-maps"
   },
-  "license": "MIT"
+  "devDependencies": {
+    "babel-core": "^6.14.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "css-loader": "^0.24.0",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "html-webpack-plugin": "^2.22.0",
+    "node-sass": "^3.8.0",
+    "sass-loader": "^4.0.0",
+    "style-loader": "^0.13.1",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.15.0"
+  },
+  "dependencies": {
+    "genetic-js": "^0.1.14",
+    "json-loader": "^0.5.4",
+    "lodash": "^4.17.4",
+    "p2": "^0.7.1"
+  }
 }
-
