@@ -1,44 +1,28 @@
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-
-var HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
-  template: __dirname + '/app/index.html',
-  filename: 'index.html',
-  inject: 'body'
-});
-
-var ExtractTextPluginConfig = new ExtractTextPlugin('style.css');
-
-var entrypoint = process.env.npm_lifecycle_event === 'dev' ?
-  'webpack-dev-server/client?http://localhost:8080' :
-  './app/index.js';
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-  entry: entrypoint,
-  output: {
-    path: __dirname + '/dist',
-    filename: 'bundle.js'
+  mode: 'development',
+  entry: './src/index.ts',
+  devServer: {
+    contentBase: './dist',
   },
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
   module: {
-    preLoaders: [
-      { test: /\.json$/, loader: 'json'},
-    ],
-    loaders: [
+    rules: [
       {
-        test: /\.js$/,
-        include: __dirname + '/app',
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015', 'stage-0']
-        }
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       },
-      {
-        test: /\.scss$/,
-        include: __dirname + '/app',
-        loader: ExtractTextPlugin.extract('css!sass')
-      }
-    ]
+    ],
   },
-  plugins: [HtmlWebpackPluginConfig, ExtractTextPluginConfig]
-}
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+  plugins: [new HtmlWebpackPlugin()],
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist'),
+  },
+};

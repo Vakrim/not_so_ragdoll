@@ -1,15 +1,24 @@
+import Scene from './Scene';
+import * as p2 from 'p2';
+
 class Renderer {
-  constructor(world) {
-    this.world = world;
-    this.canvas = document.getElementById('view');
+  scene: Scene;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  w: number;
+  h: number;
+
+  constructor(scene: Scene) {
+    this.scene = scene;
+    this.canvas = document.querySelector('canvas') as HTMLCanvasElement;
     this.w = this.canvas.width;
     this.h = this.canvas.height;
 
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
     this.ctx.lineWidth = 0.05;
   }
 
-  drawbox = body => {
+  drawbox = (body: p2.Body) => {
     const ctx = this.ctx;
     ctx.beginPath();
     const x = body.position[0];
@@ -18,9 +27,9 @@ class Renderer {
     ctx.translate(x, y);
     ctx.rotate(body.angle);
     const shape = body.shapes[0];
-    if (shape.width && shape.height) {
+    if (shape instanceof p2.Box) {
       ctx.rect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
-    } else if (shape.radius) {
+    } else if (shape instanceof p2.Circle) {
       ctx.arc(0, 0, shape.radius, 0, 2 * Math.PI, false);
     }
     ctx.stroke();
@@ -35,7 +44,7 @@ class Renderer {
     ctx.translate(this.w / 2, this.h / 2);
     ctx.scale(50, -50);
 
-    this.world.bodies.forEach(body => {
+    this.scene.bodies.forEach(body => {
       this.drawbox(body);
     });
 

@@ -1,27 +1,34 @@
-class World {
-  constructor(p2) {
-    this.p2 = p2;
+import * as p2 from 'p2';
+
+export default class Scene {
+  world: p2.World;
+  head?: p2.Body;
+  bodies: p2.Body[];
+  constraints: p2.Constraint[];
+  time: number;
+  fitness: number;
+
+  constructor() {
+    this.world = new p2.World({
+      gravity: [0, -10],
+    });
     this.bodies = [];
     this.constraints = [];
     this.createWorld();
-    this._fitness = 0;
+    this.fitness = 0;
     this.time = 0;
   }
 
-  getAngles = () => {
-    const angles = [];
-    this.bodies.map(body => {
-      let angle = body.angle % (2 * Math.PI);
-      if (angle < 0) angle += 2 * Math.PI;
-      angles.push(angle);
-    });
-    angles.push(1, Math.sin(this.time * 2 * Math.PI));
-    return angles;
+  getPositions = () => {
+    const positions: number[] = [];
+    for(let body of this.bodies) {
+      positions.push(body.position[0]);
+      positions.push(body.position[1]);
+    }
+    return positions;
   };
 
   createWorld = () => {
-    const p2 = this.p2;
-
     const jointLimit = Math.PI / 2;
 
     const shouldersDistance = 0.5,
@@ -41,7 +48,7 @@ class World {
     const BODYPARTS = Math.pow(2, 2),
       GROUND = Math.pow(2, 3),
       OTHER = Math.pow(2, 4),
-      bodyPartShapes = [];
+      bodyPartShapes: Array<p2.Shape> = [];
 
     const headShape = new p2.Circle({ radius: headRadius }),
       upperArmShapeLeft = new p2.Box({
@@ -99,25 +106,20 @@ class World {
       lowerLegShapeLeft
     );
 
-    for (var i = 0; i < bodyPartShapes.length; i++) {
-      var s = bodyPartShapes[i];
+    for (let i = 0; i < bodyPartShapes.length; i++) {
+      const s = bodyPartShapes[i];
       s.collisionGroup = BODYPARTS;
       s.collisionMask = GROUND | OTHER;
     }
 
-    const world = (this.world = new p2.World({
-      gravity: [0, -10],
-    }));
-
-    world.solver.iterations = 100;
-    world.solver.tolerance = 0.002;
+    const world = this.world;
 
     // Lower legs
-    var lowerLeftLeg = new p2.Body({
+    const lowerLeftLeg = new p2.Body({
       mass: 1,
       position: [-shouldersDistance / 2, lowerLegLength / 2],
     });
-    var lowerRightLeg = new p2.Body({
+    const lowerRightLeg = new p2.Body({
       mass: 1,
       position: [shouldersDistance / 2, lowerLegLength / 2],
     });
@@ -127,14 +129,14 @@ class World {
     this.addBody(lowerRightLeg);
 
     // Upper legs
-    var upperLeftLeg = new p2.Body({
+    const upperLeftLeg = new p2.Body({
       mass: 1,
       position: [
         -shouldersDistance / 2,
         lowerLeftLeg.position[1] + lowerLegLength / 2 + upperLegLength / 2,
       ],
     });
-    var upperRightLeg = new p2.Body({
+    const upperRightLeg = new p2.Body({
       mass: 1,
       position: [
         shouldersDistance / 2,
@@ -147,7 +149,7 @@ class World {
     this.addBody(upperRightLeg);
 
     // Pelvis
-    var pelvis = new p2.Body({
+    const pelvis = new p2.Body({
       mass: 1,
       position: [
         0,
@@ -158,7 +160,7 @@ class World {
     this.addBody(pelvis);
 
     // Upper body
-    var upperBody = new p2.Body({
+    const upperBody = new p2.Body({
       mass: 1,
       position: [
         0,
@@ -169,7 +171,7 @@ class World {
     this.addBody(upperBody);
 
     // Head
-    var head = new p2.Body({
+    const head = new p2.Body({
       mass: 1,
       position: [
         0,
@@ -181,14 +183,14 @@ class World {
     this.head = head;
 
     // Upper arms
-    var upperLeftArm = new p2.Body({
+    const upperLeftArm = new p2.Body({
       mass: 1,
       position: [
         -shouldersDistance / 2 - upperArmLength / 2,
         upperBody.position[1] + upperBodyLength / 2,
       ],
     });
-    var upperRightArm = new p2.Body({
+    const upperRightArm = new p2.Body({
       mass: 1,
       position: [
         shouldersDistance / 2 + upperArmLength / 2,
@@ -201,14 +203,14 @@ class World {
     this.addBody(upperRightArm);
 
     // lower arms
-    var lowerLeftArm = new p2.Body({
+    const lowerLeftArm = new p2.Body({
       mass: 1,
       position: [
         upperLeftArm.position[0] - lowerArmLength / 2 - upperArmLength / 2,
         upperLeftArm.position[1],
       ],
     });
-    var lowerRightArm = new p2.Body({
+    const lowerRightArm = new p2.Body({
       mass: 1,
       position: [
         upperRightArm.position[0] + lowerArmLength / 2 + upperArmLength / 2,
@@ -221,7 +223,7 @@ class World {
     this.addBody(lowerRightArm);
 
     // Neck joint
-    var neckJoint = new p2.RevoluteConstraint(head, upperBody, {
+    const neckJoint = new p2.RevoluteConstraint(head, upperBody, {
       localPivotA: [0, -headRadius - neckLength / 2],
       localPivotB: [0, upperBodyLength / 2],
     });
@@ -229,11 +231,15 @@ class World {
     this.addConstraint(neckJoint);
 
     // Knee joints
-    var leftKneeJoint = new p2.RevoluteConstraint(lowerLeftLeg, upperLeftLeg, {
-      localPivotA: [0, lowerLegLength / 2],
-      localPivotB: [0, -upperLegLength / 2],
-    });
-    var rightKneeJoint = new p2.RevoluteConstraint(
+    const leftKneeJoint = new p2.RevoluteConstraint(
+      lowerLeftLeg,
+      upperLeftLeg,
+      {
+        localPivotA: [0, lowerLegLength / 2],
+        localPivotB: [0, -upperLegLength / 2],
+      }
+    );
+    const rightKneeJoint = new p2.RevoluteConstraint(
       lowerRightLeg,
       upperRightLeg,
       {
@@ -247,11 +253,11 @@ class World {
     this.addConstraint(rightKneeJoint);
 
     // Hip joints
-    var leftHipJoint = new p2.RevoluteConstraint(upperLeftLeg, pelvis, {
+    const leftHipJoint = new p2.RevoluteConstraint(upperLeftLeg, pelvis, {
       localPivotA: [0, upperLegLength / 2],
       localPivotB: [-shouldersDistance / 2, -pelvisLength / 2],
     });
-    var rightHipJoint = new p2.RevoluteConstraint(upperRightLeg, pelvis, {
+    const rightHipJoint = new p2.RevoluteConstraint(upperRightLeg, pelvis, {
       localPivotA: [0, upperLegLength / 2],
       localPivotB: [shouldersDistance / 2, -pelvisLength / 2],
     });
@@ -261,7 +267,7 @@ class World {
     this.addConstraint(rightHipJoint);
 
     // Spine
-    var spineJoint = new p2.RevoluteConstraint(pelvis, upperBody, {
+    const spineJoint = new p2.RevoluteConstraint(pelvis, upperBody, {
       localPivotA: [0, pelvisLength / 2],
       localPivotB: [0, -upperBodyLength / 2],
     });
@@ -269,11 +275,11 @@ class World {
     this.addConstraint(spineJoint);
 
     // Shoulders
-    var leftShoulder = new p2.RevoluteConstraint(upperBody, upperLeftArm, {
+    const leftShoulder = new p2.RevoluteConstraint(upperBody, upperLeftArm, {
       localPivotA: [-shouldersDistance / 2, upperBodyLength / 2],
       localPivotB: [upperArmLength / 2, 0],
     });
-    var rightShoulder = new p2.RevoluteConstraint(upperBody, upperRightArm, {
+    const rightShoulder = new p2.RevoluteConstraint(upperBody, upperRightArm, {
       localPivotA: [shouldersDistance / 2, upperBodyLength / 2],
       localPivotB: [-upperArmLength / 2, 0],
     });
@@ -283,11 +289,15 @@ class World {
     this.addConstraint(rightShoulder);
 
     // Elbow joint
-    var leftElbowJoint = new p2.RevoluteConstraint(lowerLeftArm, upperLeftArm, {
-      localPivotA: [lowerArmLength / 2, 0],
-      localPivotB: [-upperArmLength / 2, 0],
-    });
-    var rightElbowJoint = new p2.RevoluteConstraint(
+    const leftElbowJoint = new p2.RevoluteConstraint(
+      lowerLeftArm,
+      upperLeftArm,
+      {
+        localPivotA: [lowerArmLength / 2, 0],
+        localPivotB: [-upperArmLength / 2, 0],
+      }
+    );
+    const rightElbowJoint = new p2.RevoluteConstraint(
       lowerRightArm,
       upperRightArm,
       {
@@ -296,16 +306,13 @@ class World {
       }
     );
     leftElbowJoint.setLimits(-jointLimit, jointLimit);
-    rightElbowJoint.setLimits(
-      -jointLimit,
-      jointLimit
-    );
+    rightElbowJoint.setLimits(-jointLimit, jointLimit);
     this.addConstraint(leftElbowJoint);
     this.addConstraint(rightElbowJoint);
 
     // Create ground
-    var planeShape = new p2.Plane();
-    var plane = new p2.Body({
+    const planeShape = new p2.Plane();
+    const plane = new p2.Body({
       position: [0, 0],
     });
     plane.addShape(planeShape);
@@ -314,12 +321,12 @@ class World {
     this.addBody(plane);
   };
 
-  addBody = body => {
+  addBody = (body: p2.Body) => {
     this.world.addBody(body);
     this.bodies.push(body);
   };
 
-  addConstraint = constraint => {
+  addConstraint = (constraint: p2.Constraint) => {
     this.world.addConstraint(constraint);
     this.constraints.push(constraint);
   };
@@ -327,19 +334,16 @@ class World {
   step = (t = 1 / 60) => {
     this.time += t;
     this.world.step(t);
-    this._fitness += this.head.position[1];
+    if (!this.head) {
+      throw new Error("can't step before create of world");
+    }
+    this.fitness += this.head.position[1];
   };
 
-  setMomentum = moments => {
+  setMomentum = (moments: number[]) => {
     this.constraints.forEach((constraint, i) => {
       constraint.bodyA.angularForce += moments[i];
       constraint.bodyB.angularForce -= moments[i];
     });
   };
-
-  fitness = () => {
-    return this._fitness;
-  };
 }
-
-export default World;
