@@ -21,7 +21,7 @@ export default class Scene {
 
   getPositions = () => {
     const positions: number[] = [];
-    for(let body of this.bodies) {
+    for (let body of this.bodies) {
       positions.push(body.position[0]);
       positions.push(body.position[1]);
     }
@@ -347,3 +347,24 @@ export default class Scene {
     });
   };
 }
+
+export const simulate = (moments: number[], time = 10) => {
+  const timeUnitsPerSecond = 4;
+  const timeUnits = time * timeUnitsPerSecond;
+  const scene = new Scene();
+  const numOfConstraints = scene.constraints.length;
+
+  if (numOfConstraints * timeUnits !== moments.length) {
+    throw new Error("Moments and constraints doesn't match");
+  }
+
+  for(let tu = 0; tu < timeUnits; tu++) {
+    const momentsForThisTimeUnit = moments.slice(tu * numOfConstraints, (tu + 1) * numOfConstraints);
+    for(let t = 0; t < 60 / 4; t++) {
+      scene.setMomentum(momentsForThisTimeUnit);
+      scene.step();
+    }
+  }
+
+  return scene.fitness;
+};

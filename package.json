@@ -21,6 +21,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^0.11.5",
     "@types/p2": "^0.7.31",
-    "p2": "^0.7.1"
+    "p2": "^0.7.1",
+    "ts-node": "^6.1.0"
   }
 }
